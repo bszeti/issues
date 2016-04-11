@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xmlns:transport="http://cxf.apache.org/transports/camel/blueprint"
+	xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+	<!-- init-method="registerFactory" -->
+	<bean id="camelCxfTransportFactory" class="org.apache.camel.component.cxf.transport.CamelTransportFactory" depends-on="rsServer">
+		<property name="bus" ref="cxf" />
+		<property name="camelContext" ref="myCamelContext" />
+		<property name="checkException" value="true" />
+		<property name="transportIds">
+			<list>
+				<value>http://cxf.apache.org/transports/camel</value>
+			</list>
+		</property>
+	</bean>
+
+
+	<cxf:rsServer address="camel://direct:cxfEndpoint" id="rsServer">
+		<cxf:serviceBeans>
+			<bean class="com.mycompany.cameltransporttest.MyCxfEndpoint" />
+		</cxf:serviceBeans>
+		<cxf:features>
+			<bean class="org.apache.cxf.feature.LoggingFeature" />
+		</cxf:features>
+	</cxf:rsServer>
+
+
+	<!-- Using camel-transport namespace doesn't seem to have any impact -->
+	<transport:destination camelContextId="myCamelContext" />
+
+	<camelContext id="myCamelContext" xmlns="http://camel.apache.org/schema/blueprint">
+
+		<!-- CXF service implementation in Camel -->
+		<route id="cxfServiceImpl">
+			<from uri="cxfrs:bean:rsServer?bindingStyle=SimpleConsumer" />
+			<log message="Route cxfServiceImpl was called." />
+			<setBody>
+				<simple>Hello World!</simple>
+			</setBody>
+			<setHeader headerName="Content-Type">
+				<simple>text/plain</simple>
+			</setHeader>			
+		</route>
+
+		<!-- Timer route to call the service once -->
+		<route id="timerRoute">
+			<from uri="timer:mytimer?repeatCount=1" />
+			<to uri="direct:caller" />
+		</route>
+
+		<!-- Route calling the route provided by camel-transport -->
+		<route id="callerRoute">
+			<from uri="direct:caller" />
+			<setHeader headerName="CamelHttpMethod">
+				<simple>GET</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpUri">
+				<simple>/test</simple>
+			</setHeader>
+			<log message="Calling CXF endpoint" />
+			<to uri="direct:cxfEndpoint" />
+			<convertBodyTo type="java.lang.String"/>
+			<log message="CXF response: ${body}" />
+		</route>
+	</camelContext>
+
+</blueprint>
