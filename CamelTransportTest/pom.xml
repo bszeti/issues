@@ -212,7 +212,8 @@
 				</executions>
 				<configuration>
 					<instructions>
-						<Bundle-SymbolicName>CamelTransportTest</Bundle-SymbolicName>
+						<!-- Add directive to symbolic name to disable blueprint xml validation -->
+						<Bundle-SymbolicName>CamelTransportTest;blueprint.aries.xml-validation:=false</Bundle-SymbolicName>
 						<Private-Package>com.mycompany.cameltransporttest.*</Private-Package>
 						<Import-Package>*</Import-Package>
 					</instructions>

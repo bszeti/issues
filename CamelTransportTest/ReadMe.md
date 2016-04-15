@@ -9,15 +9,23 @@ The project contains one test case. Also can be run using the camel-maven-plugin
 * Build: mvn clean install -DskipTests
 * Deploy in Fuse: JBossFuse:karaf@root> install -s mvn:com.mycompany/CamelTransportTest/1.0.0-SNAPSHOT
 
-Run was succesfully tested with Fuse 6.1.0.
+Two profiles were defined:
+- Fuse610 (default): use Fuse 6.1.0 versions
+- Fuse621: use Fuse 6.2.1 version. Add "-P Fuse621" to the mvn commands above.
 
-Issues were found using Fuse 6.2.1. Use maven profile "Fuse621" to test:
-* Run test: mvn -P Fuse621 clean test
-* Use camel-maven-plugin: mvn -P Fuse621 clean package camel:run -DskipTests
-* Build: mvn -P Fuse621 clean install -DskipTests
-* Deploy in Fuse: JBossFuse:karaf@root> install -s mvn:com.mycompany/CamelTransportTest/1.0.0-SNAPSHOT
+## Issues and solutions
+We've experienced an issue with camel-transport (in Fuse 6.2.1) using blueprint, see exception below. The solution was to use camel-transport namespace "destination" correctly:
+- Add namespace: ```xmlns:transport="http://cxf.apache.org/transports/camel/blueprint"```
+- Set camel context for destination: ```<transport:destination id="*.camel-destination" camelContextId="myCamelContext" />```
+- The "id" above is not accepted by blueprint xsd (known issue). Disable blueprint xml validation by adding a directive to Bundle-SymbolicName: ```<Bundle-SymbolicName>${project.artifactId};blueprint.aries.xml-validation:=false</Bundle-SymbolicName>```
+- To avoid exception in unit test override "getBundleDirectives()" with the directive.
 
-### Exception with Fuse 6.2.1
+Related links:
+- Doc (section "Configure the destination and conduit with Blueprint"): http://camel.apache.org/camel-transport-for-cxf.html
+- Forum: http://camel.465427.n5.nabble.com/Camel-CXF-Transport-works-within-Blueprint-only-when-XSD-validation-is-disabled-td5770593.html
+- Camel unit test: https://github.com/apache/camel/blob/camel-2.15.x/tests/camel-blueprint-cxf-test/src/test/resources/org/apache/camel/test/cxf/blueprint/CxfTransportBeans.xml
+
+### Exception found
 2016-04-11 15:34:49,818 | ERROR | l Console Thread | BlueprintCamelContext            | 204 - org.apache.camel.camel-blueprint - 2.15.1.redhat-621090 | Error occurred during starting Camel: CamelContext(myCamelContext) due CamelContext must be specified on: org.apache.camel.component.cxf.transport.CamelDestination@289b1d6
 java.lang.IllegalArgumentException: CamelContext must be specified on: org.apache.camel.component.cxf.transport.CamelDestination@289b1d6
 	at org.apache.camel.util.ObjectHelper.notNull(ObjectHelper.java:312)

@@ -13,11 +13,12 @@ public class RouteTest extends CamelBlueprintTestSupport {
         return "/OSGI-INF/blueprint/CamelTransportTest.xml";
     }
     
-//    @Override
-//    protected String getBundleFilter() {
-//    	return "(!(Bundle-SymblicName=CamelTransportTest))";
-//    	
-//    };
+    
+    //Required to disable blueprint validation in the test bundle assembled by CamelBlueprintTestSupport
+    @Override
+    protected String getBundleDirectives(){
+    	return "blueprint.aries.xml-validation:=false";
+    }
 
     @Test
     public void testRoute() throws Exception {

@@ -5,18 +5,6 @@
        http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-	<!-- init-method="registerFactory" -->
-	<bean id="camelCxfTransportFactory" class="org.apache.camel.component.cxf.transport.CamelTransportFactory" depends-on="rsServer">
-		<property name="bus" ref="cxf" />
-		<property name="camelContext" ref="myCamelContext" />
-		<property name="checkException" value="true" />
-		<property name="transportIds">
-			<list>
-				<value>http://cxf.apache.org/transports/camel</value>
-			</list>
-		</property>
-	</bean>
-
 
 	<cxf:rsServer address="camel://direct:cxfEndpoint" id="rsServer">
 		<cxf:serviceBeans>
@@ -27,9 +15,10 @@
 		</cxf:features>
 	</cxf:rsServer>
 
-
-	<!-- Using camel-transport namespace doesn't seem to have any impact -->
-	<transport:destination camelContextId="myCamelContext" />
+	<!-- Set camel context for the destination registered by camel-transport.      -->
+	<!-- The dot breaks blueprint xml validation, so it must be disabled in        -->
+	<!-- Bundle-SymbolicName using blueprint.aries.xml-validation:=false directive -->
+	<transport:destination id="*.camel-destination" camelContextId="myCamelContext" />
 
 	<camelContext id="myCamelContext" xmlns="http://camel.apache.org/schema/blueprint">
 
@@ -42,7 +31,7 @@
 			</setBody>
 			<setHeader headerName="Content-Type">
 				<simple>text/plain</simple>
-			</setHeader>			
+			</setHeader>
 		</route>
 
 		<!-- Timer route to call the service once -->
@@ -62,7 +51,7 @@
 			</setHeader>
 			<log message="Calling CXF endpoint" />
 			<to uri="direct:cxfEndpoint" />
-			<convertBodyTo type="java.lang.String"/>
+			<convertBodyTo type="java.lang.String" />
 			<log message="CXF response: ${body}" />
 		</route>
 	</camelContext>
