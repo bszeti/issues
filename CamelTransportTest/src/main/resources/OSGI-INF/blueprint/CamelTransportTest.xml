@@ -50,6 +50,7 @@
 				<simple>/test</simple>
 			</setHeader>
 			<log message="Calling CXF endpoint" />
+			<!-- To send exchange to direct:cxfEndpoint in unit tests, also need to set HTTP_BASE_URI e.g. "/" -->
 			<to uri="direct:cxfEndpoint" />
 			<convertBodyTo type="java.lang.String" />
 			<log message="CXF response: ${body}" />
